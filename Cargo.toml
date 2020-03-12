@@ -1,0 +1,25 @@
+[[bin]]
+name = "ief"
+
+[package]
+name = "ief"
+version = "0.0.1"
+authors = ["etke"]
+edition = "2018"
+license = "Apache-2.0"
+description = "Cross-platform binary import/export search"
+homepage = "https://github.com/etke/ief"
+repository = "https://github.com/etke/ief"
+documentation = "https://github.com/etke/ief"
+keywords = ["imports", "exports", "elf", "pe", "macho"]
+categroies = ["security"]
+include = [
+    "src/*.rs",
+    "Cargo.toml",
+    "README.md",
+]
+
+[dependencies]
+cpp_demangle = "0.2.14"
+goblin = "0.2.0"
+ignore = "0.4.11"
