@@ -12,7 +12,7 @@ homepage = "https://github.com/etke/ief"
 repository = "https://github.com/etke/ief"
 documentation = "https://github.com/etke/ief"
 keywords = ["imports", "exports", "elf", "pe", "macho"]
-categroies = ["security"]
+categories = ["security"]
 include = [
     "src/*.rs",
     "Cargo.toml",
@@ -23,3 +23,4 @@ include = [
 cpp_demangle = "0.2.14"
 goblin = "0.2.0"
 ignore = "0.4.11"
+memmap = "0.7.0"
