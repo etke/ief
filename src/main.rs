@@ -62,7 +62,7 @@ fn find_in_elf(
             }
         }
     }
-    return false;
+    false
 }
 
 fn find_in_macho(
@@ -97,7 +97,7 @@ fn find_in_macho(
         }
         _ => (),
     }
-    return false;
+    false
 }
 
 fn parse(file: &Path, ie: u8, name: &OsStr) -> error::Result<()> {
@@ -167,10 +167,10 @@ fn parse(file: &Path, ie: u8, name: &OsStr) -> error::Result<()> {
         },
         _ => return Err(Error::BadMagic(0)),
     }
-    return Err(Error::Malformed(format!(
+    Err(Error::Malformed(format!(
         "Unable to parse {}",
         &file.display()
-    )));
+    )))
 }
 
 fn walk(basepath: &Path, ie: u8, name: &OsStr) {
