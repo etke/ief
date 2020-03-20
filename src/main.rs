@@ -167,20 +167,15 @@ fn parse(file: &Path, ie: u8, name: &OsStr) -> error::Result<()> {
         },
         _ => return Err(Error::BadMagic(0)),
     }
-    Err(Error::Malformed(format!(
-        "Unable to parse {}",
-        &file.display()
-    )))
+    Err(Error::Malformed(format!("Unable to parse {}", &file.display())))
 }
 
 fn walk(basepath: &Path, ie: u8, name: &OsStr) {
     for result in Walk::new(basepath) {
-        match result {
-            Ok(entry) => match parse(entry.path(), ie, name) {
-                Ok(_) => println!("{}", entry.path().display()),
-                _ => (),
-            },
-            _ => (),
+        if let Ok(entry) = result {
+            if parse(entry.path(), ie, name).is_ok() {
+                println!("{}", entry.path().display())
+            }
         }
     }
 }
