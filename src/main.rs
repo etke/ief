@@ -31,7 +31,7 @@ fn demangle(symname: &String) -> String {
 fn find_in_elf(
     dynsyms: &Symtab,
     dynstrtab: &Strtab,
-    ie: &u8,
+    ie: u8,
     name: &OsStr,
 ) -> bool {
     for sym in dynsyms.iter() {
@@ -68,7 +68,7 @@ fn find_in_elf(
 fn find_in_macho(
     imports: Vec<Import<'_>>,
     exports: Vec<Export<'_>>,
-    ie: &u8,
+    ie: u8,
     name: &OsStr,
 ) -> bool {
     match ie {
@@ -100,7 +100,7 @@ fn find_in_macho(
     return false;
 }
 
-fn parse(file: &Path, ie: &u8, name: &OsStr) -> error::Result<()> {
+fn parse(file: &Path, ie: u8, name: &OsStr) -> error::Result<()> {
     let buffer: Vec<u8> = fs::read(file)?;
     match Object::parse(&buffer)? {
         Object::Elf(elf) => match ie {
@@ -112,7 +112,7 @@ fn parse(file: &Path, ie: &u8, name: &OsStr) -> error::Result<()> {
                 }
             }
             _ => {
-                if find_in_elf(&elf.dynsyms, &elf.dynstrtab, &ie, &name) {
+                if find_in_elf(&elf.dynsyms, &elf.dynstrtab, ie, &name) {
                     return Ok(());
                 }
             }
@@ -173,7 +173,7 @@ fn parse(file: &Path, ie: &u8, name: &OsStr) -> error::Result<()> {
     )));
 }
 
-fn walk(basepath: &Path, ie: &u8, name: &OsStr) {
+fn walk(basepath: &Path, ie: u8, name: &OsStr) {
     for result in Walk::new(basepath) {
         match result {
             Ok(entry) => match parse(entry.path(), ie, name) {
@@ -223,7 +223,7 @@ fn main() {
                     usage();
                 }
             };
-            walk(basepath, &ie, name);
+            walk(basepath, ie, name);
         }
         _ => {
             usage();
