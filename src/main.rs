@@ -18,7 +18,7 @@ use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::{env, fs, process};
 
-fn demangle(symname: &String) -> String {
+fn demangle(symname: &str) -> String {
     match Symbol::new(symname) {
         Ok(symbol) => {
             let dopts: DemangleOptions = DemangleOptions { no_params: true };
