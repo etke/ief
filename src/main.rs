@@ -22,9 +22,9 @@ fn demangle(symname: &String) -> String {
     match Symbol::new(symname) {
         Ok(symbol) => {
             let dopts: DemangleOptions = DemangleOptions { no_params: true };
-            return symbol.demangle(&dopts).unwrap().to_string();
+            symbol.demangle(&dopts).unwrap()
         }
-        _ => return symname.to_string(),
+        _ => symname.to_string(),
     }
 }
 
