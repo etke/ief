@@ -12,7 +12,7 @@ homepage = "https://github.com/etke/ief"
 repository = "https://github.com/etke/ief"
 documentation = "https://github.com/etke/ief"
 keywords = ["imports", "exports", "elf", "pe", "macho"]
-categories = ["security"]
+categories = ["command-line-utilities"]
 include = [
     "src/*.rs",
     "Cargo.toml",
