@@ -14,18 +14,20 @@ use goblin::{error, Object};
 
 use ignore::Walk;
 
+use memmap::Mmap;
+
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::{env, fs, process};
 
 fn demangle(symname: &str) -> String {
-    match Symbol::new(symname) {
-        Ok(symbol) => {
-            let dopts: DemangleOptions = DemangleOptions { no_params: true };
-            symbol.demangle(&dopts).unwrap()
+    if let Ok(symbol) = Symbol::new(symname) {
+        let dopts: DemangleOptions = DemangleOptions { no_params: true };
+        if let Ok(demangled) = symbol.demangle(&dopts) {
+            return demangled;
         }
-        _ => symname.to_string(),
     }
+    symname.to_string()
 }
 
 fn find_in_elf(
@@ -90,8 +92,10 @@ fn find_in_macho(
         }
         b'l' => {
             for import in imports {
-                if import.dylib.contains(name.to_str().unwrap()) {
-                    return true;
+                if let Some(name) = name.to_str() {
+                    if import.dylib.contains(name) {
+                        return true;
+                    }
                 }
             }
         }
@@ -101,71 +105,83 @@ fn find_in_macho(
 }
 
 fn parse(file: &Path, ie: u8, name: &OsStr) -> error::Result<()> {
-    let buffer: Vec<u8> = fs::read(file)?;
-    match Object::parse(&buffer)? {
-        Object::Elf(elf) => match ie {
-            b'l' => {
-                for library in &elf.libraries {
-                    if library.contains(name.to_str().unwrap()) {
+    let fp = fs::File::open(file);
+    if let Err(err) = fp {
+        return Err(Error::IO(err));
+    }
+    let buffer = unsafe { Mmap::map(&fp.unwrap()) };
+    if let Ok(buffer) = buffer {
+        match Object::parse(&buffer)? {
+            Object::Elf(elf) => match ie {
+                b'l' => {
+                    for library in &elf.libraries {
+                        if let Some(name) = name.to_str() {
+                            if library.contains(name) {
+                                return Ok(());
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    if find_in_elf(&elf.dynsyms, &elf.dynstrtab, ie, &name) {
                         return Ok(());
                     }
                 }
-            }
-            _ => {
-                if find_in_elf(&elf.dynsyms, &elf.dynstrtab, ie, &name) {
-                    return Ok(());
-                }
-            }
-        },
-        Object::PE(pe) => match ie {
-            b'i' => {
-                for import in &pe.imports {
-                    if demangle(&import.name.to_string())
-                        .eq(&name.to_string_lossy())
-                    {
-                        return Ok(());
+            },
+            Object::PE(pe) => match ie {
+                b'i' => {
+                    for import in &pe.imports {
+                        if demangle(&import.name.to_string())
+                            .eq(&name.to_string_lossy())
+                        {
+                            return Ok(());
+                        }
                     }
                 }
-            }
-            b'e' => {
-                for export in &pe.exports {
-                    let estr: String = export.name.unwrap().to_string();
-                    if demangle(&estr).eq(&name.to_string_lossy()) {
-                        return Ok(());
+                b'e' => {
+                    for export in &pe.exports {
+                        if let Some(export_name) = export.name {
+                            let estr: String = export_name.to_string();
+                            if demangle(&estr).eq(&name.to_string_lossy()) {
+                                return Ok(());
+                            }
+                        }
                     }
                 }
-            }
-            b'l' => {
-                for import in &pe.imports {
-                    if import.dll.contains(name.to_str().unwrap()) {
-                        return Ok(());
+                b'l' => {
+                    for import in &pe.imports {
+                        if let Some(name) = name.to_str() {
+                            if import.dll.contains(name) {
+                                return Ok(());
+                            }
+                        }
                     }
                 }
-            }
-            _ => (),
-        },
-        Object::Mach(mach) => match mach {
-            Mach::Binary(macho) => {
-                let imports: Vec<Import<'_>> = macho.imports().unwrap();
-                let exports: Vec<Export<'_>> = macho.exports().unwrap();
-                if find_in_macho(imports, exports, ie, name) {
-                    return Ok(());
-                }
-            }
-            Mach::Fat(fatmach) => {
-                for (idx, _) in fatmach.iter_arches().enumerate() {
-                    let container: MachO = fatmach.get(idx).unwrap();
-                    let imports: Vec<Import<'_>> =
-                        container.imports().unwrap();
-                    let exports: Vec<Export<'_>> =
-                        container.exports().unwrap();
+                _ => (),
+            },
+            Object::Mach(mach) => match mach {
+                Mach::Binary(macho) => {
+                    let imports: Vec<Import<'_>> = macho.imports().unwrap();
+                    let exports: Vec<Export<'_>> = macho.exports().unwrap();
                     if find_in_macho(imports, exports, ie, name) {
                         return Ok(());
                     }
                 }
-            }
-        },
-        _ => return Err(Error::BadMagic(0)),
+                Mach::Fat(fatmach) => {
+                    for (idx, _) in fatmach.iter_arches().enumerate() {
+                        let container: MachO = fatmach.get(idx).unwrap();
+                        let imports: Vec<Import<'_>> =
+                            container.imports().unwrap();
+                        let exports: Vec<Export<'_>> =
+                            container.exports().unwrap();
+                        if find_in_macho(imports, exports, ie, name) {
+                            return Ok(());
+                        }
+                    }
+                }
+            },
+            _ => return Err(Error::BadMagic(0)),
+        }
     }
     Err(Error::Malformed(format!("Unable to parse {}", &file.display())))
 }
