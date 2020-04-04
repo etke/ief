@@ -1,5 +1,7 @@
 # `I`mport `E`xport `F`ind
 
+[![crates.io](https://img.shields.io/badge/crates.io-v0.0.2-orange.svg)](https://crates.io/crates/ief) [![github-actions](https://github.com/etke/ief/workflows/github%20actions/badge.svg?branch=master)](https://github.com/etke/ief/actions)
+
 Cross-platform ELF/PE/MachO import/export search using [goblin](https://docs.rs/goblin).
 
 Uses [ignore](https://docs.rs/ignore) crate for fast recursive directory iteration that respects various filters such as globs, file types and `.gitignore` files.
