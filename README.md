@@ -1,6 +1,6 @@
 # `I`mport `E`xport `F`ind
 
-[![crates.io](https://img.shields.io/badge/crates.io-v0.0.2-orange.svg)](https://crates.io/crates/ief) [![github-actions](https://github.com/etke/ief/workflows/github%20actions/badge.svg?branch=master)](https://github.com/etke/ief/actions)
+[![crates.io](https://img.shields.io/crates/v/ief.svg)](https://crates.io/crates/ief) [![github-actions](https://github.com/etke/ief/workflows/github%20actions/badge.svg?branch=master)](https://github.com/etke/ief/actions)
 
 Cross-platform ELF/PE/MachO import/export search using [goblin](https://docs.rs/goblin).
 
