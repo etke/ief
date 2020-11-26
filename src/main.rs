@@ -20,6 +20,13 @@ use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::{env, fs, process};
 
+#[macro_export]
+macro_rules! demangle_compare {
+    ($left:expr; $right:expr) => {
+        demangle($left).eq(&demangle($right))
+    };
+}
+
 fn demangle(symname: &str) -> String {
     if let Ok(symbol) = Symbol::new(symname) {
         let dopts: DemangleOptions = DemangleOptions { no_params: true };
@@ -41,24 +48,28 @@ fn find_in_elf(
             // SHN_UNDEF - import
             0 => {
                 if ie.eq(&b'i') {
-                    let import: &str =
-                        dynstrtab.get(sym.st_name).unwrap().unwrap();
-                    if demangle(&import.to_string())
-                        .eq(&name.to_string_lossy())
-                    {
-                        return true;
+                    if let Some(import) = dynstrtab.get(sym.st_name) {
+                        if let Ok(iname) = import {
+                            if demangle_compare!(
+                                &iname.to_string(); &name.to_string_lossy())
+                            {
+                                return true;
+                            }
+                        }
                     }
                 }
             }
             // everything else is exported
             _ => {
                 if ie.eq(&b'e') {
-                    let export: &str =
-                        dynstrtab.get(sym.st_name).unwrap().unwrap();
-                    if demangle(&export.to_string())
-                        .eq(&name.to_string_lossy())
-                    {
-                        return true;
+                    if let Some(export) = dynstrtab.get(sym.st_name) {
+                        if let Ok(ename) = export {
+                            if demangle_compare!(
+                                &ename.to_string(); &name.to_string_lossy())
+                            {
+                                return true;
+                            }
+                        }
                     }
                 }
             }
@@ -76,8 +87,8 @@ fn find_in_macho(
     match ie {
         b'i' => {
             for import in imports {
-                if demangle(&import.name.to_string())
-                    .eq(&name.to_string_lossy())
+                if demangle_compare!(
+                    &import.name.to_string(); &name.to_string_lossy())
                 {
                     return true;
                 }
@@ -85,7 +96,9 @@ fn find_in_macho(
         }
         b'e' => {
             for export in exports {
-                if demangle(&export.name).eq(&name.to_string_lossy()) {
+                if demangle_compare!(
+                    &export.name.to_string(); &name.to_string_lossy())
+                {
                     return true;
                 }
             }
@@ -131,8 +144,8 @@ fn parse(file: &Path, ie: u8, name: &OsStr) -> error::Result<()> {
             Object::PE(pe) => match ie {
                 b'i' => {
                     for import in &pe.imports {
-                        if demangle(&import.name.to_string())
-                            .eq(&name.to_string_lossy())
+                        if demangle_compare!(
+                            &import.name.to_string(); &name.to_string_lossy())
                         {
                             return Ok(());
                         }
@@ -141,8 +154,10 @@ fn parse(file: &Path, ie: u8, name: &OsStr) -> error::Result<()> {
                 b'e' => {
                     for export in &pe.exports {
                         if let Some(export_name) = export.name {
-                            let estr: String = export_name.to_string();
-                            if demangle(&estr).eq(&name.to_string_lossy()) {
+                            if demangle_compare!(
+                                &export_name.to_string();
+                                &name.to_string_lossy())
+                            {
                                 return Ok(());
                             }
                         }
