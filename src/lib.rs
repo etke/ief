@@ -5,6 +5,6 @@ pub enum SymbolType {
     Library,
 }
 
-pub mod walk;
 #[cfg(feature = "binja")]
 pub mod binja;
+pub mod walk;
