@@ -8,7 +8,9 @@ Uses [ignore](https://docs.rs/ignore) crate for fast recursive directory iterati
 
 ## Build/Install
 
-### git *(HEAD)*
+## Binary
+
+#### git *(HEAD)*
 
 ```sh
 git clone https://github.com/etke/ief && cd ief
@@ -16,10 +18,20 @@ cargo build --release
 cargo install --path .
 ```
 
-### cargo
+#### cargo
 
 ```sh
 cargo install ief
+```
+
+## BinaryNinja Plugin
+
+### git *(HEAD)*
+
+```sh
+git clone https://github.com/etke/ief && cd ief
+cargo build --features=binja --release
+cp target/release/libief.so ~/.binaryninja/plugins/
 ```
 
 ## Usage

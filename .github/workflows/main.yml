@@ -56,5 +56,5 @@ jobs:
       if: startsWith(runner.os, 'Linux') && matrix.rust == 'stable'
       run: |
         rustup component add clippy
-        cargo clippy
-    - run: cargo build
+        cargo clippy --features binja -- -W clippy::pedantic
+    - run: cargo build --features binja
