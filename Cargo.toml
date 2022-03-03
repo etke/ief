@@ -28,7 +28,7 @@ readme = "README.md"
 
 [features]
 default = []
-binja = []
+binja = ["binaryninja", "log"]
 
 [profile.release]
 codegen-units = 1   # Reduce number of codegen units to increase optimizations
@@ -41,6 +41,5 @@ cpp_demangle = "0.3.5"
 goblin = "0.4.3"
 ignore = "0.4.11"
 memmap = "0.7.0"
-#[feature(binja)]
-binaryninja = { git = "https://github.com/Vector35/binaryninja-api.git", branch = "dev" }
-log = "0.4.14"
+binaryninja = { git = "https://github.com/Vector35/binaryninja-api.git", branch = "dev", optional = true }
+log = { version = "0.4.14", optional = true }
